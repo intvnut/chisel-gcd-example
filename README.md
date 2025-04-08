@@ -9,8 +9,9 @@ and output, so that the GCD computation can overlap with delays in input
 and output.
 
 The original verison (retained as `DecoupledGcdOrig` in `DecoupledGcd.scala`)
-has a minimum of two dead cycles--one and the start and one at the end--and
-will not start a new computation before the previous result has been accepted.
+has a minimum of two dead cycles&mdash;one at the start and one at the
+end&mdash;and will not start a new computation before the previous result has
+been accepted.
 
 The modified version will start a new computation whenever there is a
 buffered input and the previous output has a buffer to flow into.
