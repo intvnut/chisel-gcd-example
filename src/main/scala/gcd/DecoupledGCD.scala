@@ -52,12 +52,6 @@ class DecoupledGcd(width: Int) extends Module {
   val workY    = Reg(UInt())
   val busy     = RegInit(false.B)
 
-  // Output skid buffer.
-  val oBufX    = Reg(UInt())
-  val oBufY    = Reg(UInt())
-  val oBufGcd  = Reg(UInt())
-  val oBufFull = RegInit(false.B)
-
   // GCD computation step.
   val diffXY   = workX -& workY
   val diffYX   = workY -& workX
@@ -69,6 +63,15 @@ class DecoupledGcd(width: Int) extends Module {
   val yIsZero  = workY === 0.U
   val gcdValue = workX | workY
   val gcdValid = busy && (xIsZero || xEqualsY || yIsZero)
+
+  // Output skid buffer.
+  val oBufX    = Reg(UInt())
+  val oBufY    = Reg(UInt())
+  val oBufGcd  = Reg(UInt())
+  val oBufFull = RegInit(false.B)
+  val oX       = Mux(oBufFull, oBufX,   origX)
+  val oY       = Mux(oBufFull, oBufY,   origY)
+  val oGcd     = Mux(oBufFull, oBufGcd, gcdValue)
 
   // State transition signals.
   val oAvail   = !oBufFull
@@ -109,9 +112,9 @@ class DecoupledGcd(width: Int) extends Module {
   }
 
   // Output buffer updates for next cycle
-  output.bits.value1 := Mux(oBufFull, oBufX,   origX)
-  output.bits.value2 := Mux(oBufFull, oBufY,   origY)
-  output.bits.gcd    := Mux(oBufFull, oBufGcd, gcdValue)
+  output.bits.value1 := oX
+  output.bits.value2 := oY
+  output.bits.gcd    := oGcd
   output.valid       := oBufFull || gcdValid
 
   when (oAccept) {
