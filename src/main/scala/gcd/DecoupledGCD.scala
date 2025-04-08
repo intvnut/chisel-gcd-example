@@ -58,11 +58,15 @@ class DecoupledGcd(width: Int) extends Module {
   val xIsLess  = diffXY(width)
   val yIsLess  = diffYX(width)
 
-  val xIsZero  = workX === 0.U
+  val xIs0Or1  = !(workX(width - 1, 1).orR)
+  val yIs0Or1  = !(workY(width - 1, 1).orR)
+  val xIsZero  = xIs0Or1 && !workX(0)
+  val yIsZero  = yIs0Or1 && !workY(0)
+  val xIsOne   = xIs0Or1 &&  workX(0)
+  val yIsOne   = yIs0Or1 &&  workY(0)
   val xEqualsY = workX === workY
-  val yIsZero  = workY === 0.U
-  val gcdValue = workX | workY
-  val gcdValid = busy && (xIsZero || xEqualsY || yIsZero)
+  val gcdValue = Mux(yIsOne, !xIsZero, workX) | Mux(xIsOne, !yIsZero, workY)
+  val gcdValid = busy && (xIs0Or1 || xEqualsY || yIs0Or1)
 
   // Output skid buffer.
   val oBufX    = Reg(UInt())

@@ -90,11 +90,11 @@ class GCDSpec extends AnyFreeSpec with Matchers {
       dut.reset.poke(false.B)
       dut.clock.step()
 
-      for (inDelay <- 0 to 2) {
-        for (outDelay <- 0 to 2) {
+      for (inDelay <- 0 to 3) {
+        for (outDelay <- 0 to 3) {
           var sent, received, cycles, delayIn, delayOut: Int = 0
           while (sent != 100 || received != 100) {
-            assert(cycles <= 1500, "timeout reached")
+            assert(cycles <= 2500, "timeout reached")
 
 //println(s"dIn=$delayIn dOut=$delayOut sent=$sent recv=$received")
 
