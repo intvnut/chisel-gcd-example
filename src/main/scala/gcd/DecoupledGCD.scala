@@ -20,7 +20,7 @@ class GcdOutputBundle(val w: Int) extends Bundle {
   * Compute Gcd using subtraction method.
   *
   * Subtracts the smaller from the larger until either X or Y register
-  * becomes zero, or the two registers become equal. Because the two 
+  * becomes zero, or the two registers become equal. Because the two
   * registers are equal at the end, or one of the two registers is zero,
   * we can simply bitwise-OR the two registers to report the GCD.
   *
@@ -78,22 +78,22 @@ class DecoupledGcd(width: Int) extends Module {
   val oGcd     = Mux(oBufFull, oBufGcd, gcdValue)
 
   // State transition signals.
-  val oAvail   = !oBufFull
-  val oAccept  = gcdValid && oAvail
+  val oValid   = gcdValid
+  val oReady   = !oBufFull
   val iValid   = input.valid || iBufFull
-  val iAccept  = oAccept || !busy
-  val iAdvance = iAccept || (input.valid && !iBufFull) // Advance iBuf.
+  val iReady   = (oValid && oReady) || (input.valid && !busy)
+  val iAdvance = iReady || (input.valid && !iBufFull) // Advance iBuf.
 
   // Input buffer updates for next cycle.
-  input.ready := iAccept || !iBufFull                  // Dequeue input.
+  input.ready := iReady || !iBufFull                  // Dequeue input.
   when (iAdvance) {
     iBufX    := input.bits.value1
     iBufY    := input.bits.value2
-    iBufFull := Mux(input.valid === iAccept, iBufFull, input.valid)
+    iBufFull := Mux(input.valid === iReady, iBufFull, input.valid)
   }
 
   // Update working registers based on our computed state transition.
-  when (iValid && iAccept) {
+  when (iValid && iReady) {
     origX := iX
     origY := iY
     workX := iX
@@ -104,7 +104,7 @@ class DecoupledGcd(width: Int) extends Module {
     // us to read the GCD off of X | Y.
     workX := Mux(yIsLess, diffXY(width - 1, 0), workX)
     workY := Mux(xIsLess, diffYX(width - 1, 0), workY)
-    busy  := !gcdValid || !oAvail
+    busy  := !gcdValid || !oReady
   }
 
   // Output buffer updates for next cycle
@@ -113,7 +113,7 @@ class DecoupledGcd(width: Int) extends Module {
   output.bits.gcd    := oGcd
   output.valid       := oBufFull || gcdValid
 
-  when (oAccept) {
+  when (oValid && oReady) {
     oBufX    := origX
     oBufY    := origY
     oBufGcd  := gcdValue
