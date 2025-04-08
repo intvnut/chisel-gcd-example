@@ -24,8 +24,8 @@ class GcdOutputBundle(val w: Int) extends Bundle {
   * Can handle stalls on the producer or consumer side
   */
 class DecoupledGcd(width: Int) extends Module {
-  val input       = IO(Flipped(Decoupled(new GcdInputBundle(width))))
-  val output      = IO(Decoupled(new GcdOutputBundle(width)))
+  val input    = IO(Flipped(Decoupled(new GcdInputBundle(width))))
+  val output   = IO(Decoupled(new GcdOutputBundle(width)))
 
   // Input skid buffer.
   val iBufX    = Reg(UInt())
@@ -52,7 +52,7 @@ class DecoupledGcd(width: Int) extends Module {
   val diffYX   = workY -& workX
   val xIsLess  = diffXY(width)
   val yIsLess  = diffYX(width)
-                 
+
   val xIsZero  = workX === 0.U
   val xEqualsY = workX === workY
   val yIsZero  = workY === 0.U
