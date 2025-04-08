@@ -18,10 +18,21 @@ class GcdOutputBundle(val w: Int) extends Bundle {
 
 /**
   * Compute Gcd using subtraction method.
-  * Subtracts the smaller from the larger until register y is zero.
-  * value input register x is then the Gcd.
-  * Unless first input is zero then the Gcd is y.
-  * Can handle stalls on the producer or consumer side
+  *
+  * Subtracts the smaller from the larger until either X or Y register
+  * becomes zero, or the two registers become equal. Because the two 
+  * registers are equal at the end, or one of the two registers is zero,
+  * we can simply bitwise-OR the two registers to report the GCD.
+  *
+  * This version handles stalls on the input and output with skid buffers,
+  * further decoupling the input from the computation. This speeds up the
+  * block significantly over the original version, three ways:
+  *
+  *  -- It eliminates the mandatory dead cycles at start and completion.
+  *  -- It starts a new request before the previous result has been
+  *     accepted.
+  *  -- It queues the next input before it's ready, in case the sender
+  *     has its own gaps between consecutive requests.
   */
 class DecoupledGcd(width: Int) extends Module {
   val input    = IO(Flipped(Decoupled(new GcdInputBundle(width))))
