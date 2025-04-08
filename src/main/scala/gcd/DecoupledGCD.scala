@@ -89,26 +89,18 @@ class DecoupledGcd(width: Int) extends Module {
   }
 
   // Update working registers based on our computed state transition.
-  when (busy) {
-    when (iValid && iAccept) {
-      origX := iX
-      origY := iY
-      workX := iX
-      workY := iY
-      busy  := true.B
-    } .otherwise {
-      // This formulation does not go to [0, 0] when X === Y, which allows
-      // us to read the GCD off of X | Y.
-      workX := Mux(yIsLess, diffXY(width - 1, 0), workX)
-      workY := Mux(xIsLess, diffYX(width - 1, 0), workY)
-      busy  := !gcdValid || !oAvail
-    }
-  } .elsewhen (iValid) {
+  when (iValid && iAccept) {
     origX := iX
     origY := iY
     workX := iX
     workY := iY
     busy  := true.B
+  } .elsewhen (busy) {
+    // This formulation does not go to [0, 0] when X === Y, which allows
+    // us to read the GCD off of X | Y.
+    workX := Mux(yIsLess, diffXY(width - 1, 0), workX)
+    workY := Mux(xIsLess, diffYX(width - 1, 0), workY)
+    busy  := !gcdValid || !oAvail
   }
 
   // Output buffer updates for next cycle
